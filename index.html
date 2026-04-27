@@ -222,7 +222,7 @@
             }
         };
 
-        // 차트 생성
+       // 차트 생성
         myChart = new Chart(ctx, {
             type: chartType,
             data: {
@@ -235,6 +235,7 @@
                 }]
             },
             options: {
+                devicePixelRatio: 3, // 👈 [핵심!] 캔버스 내부 화질을 3배로 높여서 캡처 시 깨짐 방지
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: chartType === 'doughnut' ? '30%' : '0%', // 도넛 두께
