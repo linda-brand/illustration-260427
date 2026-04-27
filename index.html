@@ -3,205 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 데이터 시각화 도구</title>
+    <title>도해 그래프 제작 보조</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        body { background-color: #f8f9fa; font-family: 'Pretendard', sans-serif; padding-bottom: 50px; }
-        .container { max-width: 800px; margin-top: 30px; }
-        .step-card { border-radius: 15px; margin-bottom: 20px; overflow: hidden; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .step-header { padding: 15px 20px; color: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         
-        /* 단계별 색상 */
-        .step-1 { border-left: 10px solid #0d6efd; } .step-1 .step-header { background-color: #0d6efd; }
-        .step-2 { border-left: 10px solid #212529; } .step-2 .step-header { background-color: #212529; }
-        .step-3 { border-left: 10px solid #dc3545; } .step-3 .step-header { background-color: #dc3545; }
-        .step-4 { border-left: 10px solid #198754; } .step-4 .step-header { background-color: #198754; }
-
-        .step-body { padding: 20px; background-color: white; display: none; }
+        body { background-color: #eef1f5; font-family: 'Pretendard', sans-serif; display: flex; height: 100vh; margin: 0; overflow: hidden; }
+        
+        /* 왼쪽 컨트롤 패널 */
+        .sidebar { width: 400px; background-color: #f8f9fa; border-right: 1px solid #ddd; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .top-nav { display: flex; gap: 5px; margin-bottom: 10px; border-bottom: 2px solid #dc3545; padding-bottom: 10px; }
+        .top-nav button { flex: 1; font-size: 12px; padding: 5px; }
+        
+        /* 아코디언 스타일 */
+        .step-card { border: 1px solid #ddd; border-radius: 8px; background: #fff; overflow: hidden; }
+        .step-header { padding: 10px 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #f1f3f5; }
+        .step-body { padding: 15px; display: none; font-size: 13px; }
         .active .step-body { display: block; }
         
-        table { width: 100%; margin-top: 10px; border-collapse: collapse; }
-        th, td { border: 1px solid #dee2e6; padding: 8px; text-align: center; }
-        th { background-color: #f1f3f5; }
-        [contenteditable]:focus { outline: 2px solid #0d6efd; background-color: #fff; }
+        /* 단계별 색상 포인트 */
+        .step-1 { border-left: 5px solid #0d6efd; } .step-1 .step-header { color: #0d6efd; background: #e7f1ff; }
+        .step-2 { border-left: 5px solid #212529; } .step-2 .step-header { color: #212529; background: #e9ecef; }
+        .step-3 { border-left: 5px solid #dc3545; } .step-3 .step-header { color: #dc3545; background: #fdf2f2; }
+        .step-4 { border-left: 5px solid #198754; } .step-4 .step-header { color: #198754; background: #e8f5e9; }
         
-        .chart-container { position: relative; height: 40vh; width: 100%; margin-top: 20px; }
+        input.form-control, select.form-select, textarea.form-control { font-size: 13px; }
+        label { font-weight: bold; margin-top: 10px; font-size: 12px; color: #555; }
+        
+        /* 오른쪽 미리보기 영역 */
+        .preview-area { flex: 1; padding: 40px; display: flex; justify-content: center; align-items: center; overflow-y: auto; }
+        .paper { background: white; width: 100%; max-width: 750px; aspect-ratio: 1 / 1.1; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 40px; display: flex; flex-direction: column; position: relative; }
+        
+        /* 캔버스 및 텍스트 레이아웃 */
+        .chart-title-area { border-top: 3px solid #000; padding-top: 15px; margin-bottom: 20px; }
+        .chart-title { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -1px; }
+        .chart-subtitle { font-size: 14px; color: #555; margin-top: 10px; }
+        
+        .chart-container { flex: 1; position: relative; width: 100%; min-height: 400px; display: flex; justify-content: center; align-items: center; }
+        
+        .chart-footer { border-top: 1px solid #ddd; padding-top: 10px; text-align: right; font-size: 14px; font-weight: bold; color: #333; margin-top: 20px; }
+        .chart-footer span { font-size: 18px; font-weight: 900; margin-left: 5px; }
+
+        /* 커스텀 슬라이더 */
+        input[type=range] { width: 100%; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2 class="text-center mb-4">📊 데이터 시각화 웹앱</h2>
+<div class="sidebar">
+    <h4>🛠️ 그래픽 보조 데스크</h4>
+    
+    <div class="top-nav">
+        <button class="btn btn-outline-secondary btn-sm">되돌리기</button>
+        <button class="btn btn-primary btn-sm" onclick="toggleStep('step1')">입력</button>
+        <button class="btn btn-dark btn-sm" onclick="toggleStep('step2')">데이터수정</button>
+        <button class="btn btn-danger btn-sm" onclick="toggleStep('step3')">디자인</button>
+        <button class="btn btn-success btn-sm" onclick="toggleStep('step4')">저장</button>
+    </div>
 
-    <div class="step-card step-1 active" id="step1">
-        <div class="step-header" onclick="toggleStep('step1')">
-            <span>✍️ 1) 입력</span>
-            <span>▼</span>
-        </div>
+    <div class="step-card step-1" id="step1">
+        <div class="step-header" onclick="toggleStep('step1')"><span>✍️ 1) 입력</span> <span>▼</span></div>
         <div class="step-body">
-            <h6>🤖 제미나이 데이터 자동 입력</h6>
-            <p class="text-muted small">데이터(CSV 또는 표 형태)를 아래에 붙여넣으세요.</p>
-            <textarea id="csvInput" class="form-control" rows="5" placeholder="연도,가격&#10;2021,1000&#10;2022,1200&#10;2023,1100"></textarea>
-            <button class="btn btn-primary w-100 mt-3" onclick="parseData()">🪄 AI 데이터 자동 완성하기</button>
+            <label>데이터 자동 입력</label>
+            <textarea id="rawInput" class="form-control" rows="4" placeholder="삼성전자, 40.6&#10;SK하이닉스, 29.9&#10;마이크론, 24.8&#10;기타, 4.7"></textarea>
+            <button class="btn btn-primary w-100 mt-2" onclick="parseRawData()">🪄 AI 데이터 자동 완성하기</button>
         </div>
     </div>
 
-    <div class="step-card step-2" id="step2">
-        <div class="step-header" onclick="toggleStep('step2')">
-            <span>📊 2) 데이터수정</span>
-            <span>▼</span>
-        </div>
+    <div class="step-card step-2 active" id="step2">
+        <div class="step-header" onclick="toggleStep('step2')"><span>📊 2) 데이터수정</span> <span>▼</span></div>
         <div class="step-body">
-            <p class="text-muted small">표의 셀을 클릭하여 값을 직접 수정할 수 있습니다.</p>
-            <div class="table-responsive">
-                <table id="dataTable">
-                    <thead><tr id="tableHeader"></tr></thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
-            <button class="btn btn-dark btn-sm mt-2" onclick="addRow()">+ 행 추가</button>
+            <label>종류 선택</label>
+            <select id="chartType" class="form-select" onchange="updatePreview()">
+                <option value="doughnut">원 그래프 (도넛 차트)</option>
+                <option value="pie">원 그래프 (파이 차트)</option>
+                <option value="bar">막대 그래프</option>
+            </select>
+            
+            <label>X축(항목) 데이터 라벨 (콤마 구분)</label>
+            <textarea id="xLabels" class="form-control" rows="2" oninput="updatePreview()">삼성전자,SK하이닉스,마이크론,기타</textarea>
+            
+            <label>데이터 수치 (콤마 구분)</label>
+            <textarea id="yValues" class="form-control" rows="2" oninput="updatePreview()">40.6, 29.9, 24.8, 4.7</textarea>
+
+            <hr>
+            <label>제목</label>
+            <input type="text" id="inputTitle" class="form-control" value="세계 D램 시장 점유율(22년 3분기)" oninput="updatePreview()">
+            
+            <label>단위 및 출처</label>
+            <input type="text" id="inputSubtitle" class="form-control" value="(단위: %, 자료: 옴디아)" oninput="updatePreview()">
+            
+            <label>바닥글 (기자명 등)</label>
+            <input type="text" id="inputFooter" class="form-control" value="그래픽 박조비 기자" oninput="updatePreview()">
         </div>
     </div>
 
     <div class="step-card step-3" id="step3">
-        <div class="step-header" onclick="toggleStep('step3')">
-            <span>🎨 3) 디자인</span>
-            <span>▼</span>
-        </div>
+        <div class="step-header" onclick="toggleStep('step3')"><span>🎨 3) 디자인</span> <span>▼</span></div>
         <div class="step-body">
-            <div class="row">
-                <div class="col-6">
-                    <label class="form-label">그래프 종류</label>
-                    <select id="chartType" class="form-select">
-                        <option value="line">선 그래프</option>
-                        <option value="bar">막대 그래프</option>
-                        <option value="pie">원 그래프</option>
-                        <option value="scatter">산점도</option>
-                    </select>
-                </div>
-                <div class="col-6">
-                    <label class="form-label">값 선택(Y축)</label>
-                    <select id="yAxis" class="form-select"></select>
-                </div>
+            <label>색상 팔레트 프리셋</label>
+            <div class="d-flex gap-2 mt-1">
+                <button class="btn btn-outline-danger btn-sm w-50" onclick="changePalette('asia')">🔴 도해 기본</button>
+                <button class="btn btn-outline-primary btn-sm w-50" onclick="changePalette('blue')">🔵 그래프 제작용</button>
             </div>
-            <button class="btn btn-danger w-100 mt-3" onclick="drawChart()">그래프 그리기</button>
-            <div class="chart-container">
-                <canvas id="myChart"></canvas>
-            </div>
+            
+            <label class="mt-3">표/그래프 글자 크기 미세 조절 (<span id="titleSizeLabel">28px</span>)</label>
+            <input type="range" id="titleSize" min="18" max="40" value="28" oninput="updateStyle()">
+            
+            <label>데이터별 수치 글자 크기 (<span id="dataSizeLabel">18px</span>)</label>
+            <input type="range" id="dataSize" min="10" max="30" value="18" oninput="updateStyle()">
         </div>
     </div>
 
     <div class="step-card step-4" id="step4">
-        <div class="step-header" onclick="toggleStep('step4')">
-            <span>💾 4) 저장</span>
-            <span>▼</span>
+        <div class="step-header" onclick="toggleStep('step4')"><span>💾 4) 저장</span> <span>▼</span></div>
+        <div class="step-body">
+            <button class="btn btn-danger w-100 mb-3" onclick="updatePreview()">🔄 수동 적용하기</button>
+            <button class="btn btn-dark w-100 mb-2" onclick="downloadImage()">📸 고해상도 PNG 저장</button>
+            <p class="text-muted small text-center">현재 작업 화면을 이미지로 추출합니다.</p>
         </div>
-        <div class="step-body text-center">
-            <button class="btn btn-success me-2" onclick="downloadCSV()">📥 데이터(CSV) 다운로드</button>
-            <button class="btn btn-outline-success" onclick="downloadImage()">🖼️ 그래프 이미지 저장</button>
+    </div>
+</div>
+
+<div class="preview-area">
+    <div class="paper" id="capture-area">
+        <div class="chart-title-area">
+            <h1 class="chart-title" id="outTitle">세계 D램 시장 점유율(22년 3분기)</h1>
+            <p class="chart-subtitle" id="outSubtitle">(단위: %, 자료: 옴디아)</p>
+        </div>
+        <div class="chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+        <div class="chart-footer">
+            <span id="outFooter" style="font-size:14px; font-weight:bold;">신문사에서</span> <span>신문사</span>
         </div>
     </div>
 </div>
 
 <script>
-    let rawData = [];
-    let headers = [];
     let myChart = null;
+    
+    // 기본 팔레트 
+    let currentPalette = ['#E61E2B', '#555555', '#888888', '#aaaaaa', '#cccccc'];
 
-    // 단계 접기/펴기 함수
+    // 1. 아코디언 토글 기능
     function toggleStep(id) {
-        document.getElementById(id).classList.toggle('active');
+        document.querySelectorAll('.step-card').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
     }
 
-    // 1단계: 데이터 파싱
-    function parseData() {
-        const input = document.getElementById('csvInput').value;
-        const rows = input.trim().split('\n');
-        if (rows.length < 2) return alert("데이터 형식이 올바르지 않습니다.");
-
-        headers = rows[0].split(',').map(h => h.trim());
-        rawData = rows.slice(1).map(row => row.split(',').map(v => v.trim()));
-
-        renderTable();
-        updateSelects();
-        document.getElementById('step2').classList.add('active');
-        alert("데이터가 로드되었습니다!");
-    }
-
-    // 2단계: 테이블 그리기 (에디터 기능)
-    function renderTable() {
-        const headerRow = document.getElementById('tableHeader');
-        const bodyRows = document.getElementById('tableBody');
+    // 2. 텍스트 데이터를 파싱하여 인풋창에 넣기
+    function parseRawData() {
+        const text = document.getElementById('rawInput').value.trim();
+        if(!text) return alert("데이터를 입력해주세요.");
         
-        headerRow.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
-        bodyRows.innerHTML = rawData.map((row, idx) => `
-            <tr>
-                ${row.map((cell, cIdx) => `<td contenteditable="true" onblur="updateCell(${idx}, ${cIdx}, this)">${cell}</td>`).join('')}
-            </tr>
-        `).join('');
+        const lines = text.split('\n');
+        let labels = [];
+        let values = [];
+        
+        lines.forEach(line => {
+            const parts = line.split(',');
+            if(parts.length >= 2) {
+                labels.push(parts[0].trim());
+                values.push(parts[1].trim());
+            }
+        });
+        
+        document.getElementById('xLabels').value = labels.join(',');
+        document.getElementById('yValues').value = values.join(',');
+        
+        toggleStep('step2');
+        updatePreview();
     }
 
-    function updateCell(r, c, el) {
-        rawData[r][c] = el.innerText;
-    }
+    // 3. 차트 및 텍스트 업데이트 메인 함수
+    function updatePreview() {
+        // 텍스트 반영
+        document.getElementById('outTitle').innerText = document.getElementById('inputTitle').value;
+        document.getElementById('outSubtitle').innerText = document.getElementById('inputSubtitle').value;
+        document.getElementById('outFooter').innerText = document.getElementById('inputFooter').value;
 
-    function addRow() {
-        rawData.push(new Array(headers.length).fill('0'));
-        renderTable();
-    }
+        // 차트 데이터 가져오기
+        const labels = document.getElementById('xLabels').value.split(',').map(s => s.trim());
+        const dataValues = document.getElementById('yValues').value.split(',').map(Number);
+        const chartType = document.getElementById('chartType').value;
+        const dataFontSize = parseInt(document.getElementById('dataSize').value);
 
-    function updateSelects() {
-        const ySelect = document.getElementById('yAxis');
-        ySelect.innerHTML = headers.map((h, i) => `<option value="${i}">${h}</option>`).join('');
-    }
-
-    // 3단계: 그래프 그리기 (Chart.js)
-    function drawChart() {
         const ctx = document.getElementById('myChart').getContext('2d');
-        const type = document.getElementById('chartType').value;
-        const yIdx = document.getElementById('yAxis').value;
+        
+        if (myChart) { myChart.destroy(); } // 기존 차트 삭제
 
-        if (myChart) myChart.destroy();
+        // 플러그인: 도넛 차트 내부에 라벨 및 수치 텍스트 직접 그리기
+        const alwaysShowDataLabel = {
+            id: 'alwaysShowDataLabel',
+            afterDraw(chart, args, options) {
+                const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
+                ctx.save();
+                
+                chart.data.datasets.forEach((dataset, i) => {
+                    chart.getDatasetMeta(i).data.forEach((datapoint, index) => {
+                        const { x, y } = datapoint.tooltipPosition();
+                        const text = chart.data.labels[index];
+                        const value = dataset.data[index];
+                        
+                        // 텍스트 설정
+                        ctx.font = `bold ${dataFontSize}px Pretendard`;
+                        ctx.fillStyle = '#ffffff'; // 데이터 라벨 기본 흰색
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        // 파이/도넛일 경우 내부에 글씨 쓰기 (기타 항목처럼 좁은 구역은 밖으로 빼는 등 고도화 가능하지만 기본 형태 구현)
+                        ctx.fillText(text, x, y - 10);
+                        ctx.fillText(value, x, y + 15);
+                    });
+                });
+            }
+        };
 
-        const labels = rawData.map(row => row[0]); // 첫 번째 열을 X축 라벨로 사용
-        const dataValues = rawData.map(row => parseFloat(row[yIdx]) || 0);
-
+        // 차트 생성
         myChart = new Chart(ctx, {
-            type: type,
+            type: chartType,
             data: {
                 labels: labels,
                 datasets: [{
-                    label: headers[yIdx],
                     data: dataValues,
-                    backgroundColor: ['#0d6efd', '#ffc107', '#198754', '#dc3545', '#6610f2'],
-                    borderColor: '#0d6efd',
-                    borderWidth: 2
+                    backgroundColor: currentPalette,
+                    borderWidth: 3,
+                    borderColor: '#ffffff', // 구분선 흰색
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false
-            }
+                maintainAspectRatio: false,
+                cutout: chartType === 'doughnut' ? '30%' : '0%', // 도넛 두께
+                plugins: {
+                    legend: { display: false }, // 범례 숨김 (이미지와 동일하게)
+                    tooltip: { enabled: false } // 툴팁 숨김
+                },
+                layout: { padding: 20 }
+            },
+            plugins: [alwaysShowDataLabel]
         });
     }
 
-    // 4단계: 다운로드 기능
-    function downloadCSV() {
-        let csvContent = headers.join(',') + '\n' + rawData.map(r => r.join(',')).join('\n');
-        const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "data.csv";
-        link.click();
+    // 4. 스타일 조절 (글자 크기, 색상)
+    function updateStyle() {
+        // 제목 크기
+        const titleSize = document.getElementById('titleSize').value;
+        document.getElementById('titleSizeLabel').innerText = titleSize + 'px';
+        document.getElementById('outTitle').style.fontSize = titleSize + 'px';
+        
+        // 데이터 크기 (차트 리렌더링 필요)
+        const dataSize = document.getElementById('dataSize').value;
+        document.getElementById('dataSizeLabel').innerText = dataSize + 'px';
+        updatePreview();
     }
 
-    function downloadImage() {
-        const link = document.createElement("a");
-        link.href = document.getElementById('myChart').toDataURL("image/png");
-        link.download = "chart.png";
-        link.click();
+    // 팔레트 변경 버튼 동작
+    function changePalette(theme) {
+        if(theme === 'asia') currentPalette = ['#E61E2B', '#555555', '#888888', '#aaaaaa', '#cccccc'];
+        if(theme === 'blue') currentPalette = ['#0051a8', '#38b6ff', '#888888', '#aaaaaa', '#cccccc'];
+        updatePreview();
     }
+
+    // 5. 이미지 캡처 및 다운로드 기능 (html2canvas)
+    function downloadImage() {
+        const captureDiv = document.getElementById('capture-area');
+        
+        // 화질 향상을 위해 scale 증가
+        html2canvas(captureDiv, { scale: 3, useCORS: true }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'graphic_desk_export.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
+
+    // 초기 로딩 시 차트 그리기
+    window.onload = function() {
+        updatePreview();
+    };
 </script>
 
 </body>
