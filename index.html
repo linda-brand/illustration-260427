@@ -53,7 +53,7 @@
 <body>
 
 <div class="sidebar">
-    <h4>🛠️ 그래픽 보조 데스크</h4>
+    <h4>그래픽 보조 데스크</h4>
     
     <div class="top-nav">
         <button class="btn btn-outline-secondary btn-sm">되돌리기</button>
@@ -67,8 +67,8 @@
         <div class="step-header" onclick="toggleStep('step1')"><span>✍️ 1) 입력</span> <span>▼</span></div>
         <div class="step-body">
             <label>데이터 자동 입력</label>
-            <textarea id="rawInput" class="form-control" rows="4" placeholder="삼성전자, 40.6&#10;SK하이닉스, 29.9&#10;마이크론, 24.8&#10;기타, 4.7"></textarea>
-            <button class="btn btn-primary w-100 mt-2" onclick="parseRawData()">🪄 AI 데이터 자동 완성하기</button>
+            <textarea id="rawInput" class="form-control" rows="4" placeholder="석유, 38&#10;석탄, 35&#10;천연가스, 20.5&#10;기타, 5.8"></textarea>
+            <button class="btn btn-primary w-100 mt-2" onclick="parseRawData()">데이터 자동 완성하기</button>
         </div>
     </div>
 
@@ -83,20 +83,20 @@
             </select>
             
             <label>X축(항목) 데이터 라벨 (콤마 구분)</label>
-            <textarea id="xLabels" class="form-control" rows="2" oninput="updatePreview()">삼성전자,SK하이닉스,마이크론,기타</textarea>
+            <textarea id="xLabels" class="form-control" rows="2" oninput="updatePreview()">석유,석탄,천연가스,기타</textarea>
             
             <label>데이터 수치 (콤마 구분)</label>
-            <textarea id="yValues" class="form-control" rows="2" oninput="updatePreview()">40.6, 29.9, 24.8, 4.7</textarea>
+            <textarea id="yValues" class="form-control" rows="2" oninput="updatePreview()">38, 35, 20.5, 5.8</textarea>
 
             <hr>
             <label>제목</label>
-            <input type="text" id="inputTitle" class="form-control" value="세계 D램 시장 점유율(22년 3분기)" oninput="updatePreview()">
+            <input type="text" id="inputTitle" class="form-control" value="세계 자원 점유량" oninput="updatePreview()">
             
             <label>단위 및 출처</label>
-            <input type="text" id="inputSubtitle" class="form-control" value="(단위: %, 자료: 옴디아)" oninput="updatePreview()">
+            <input type="text" id="inputSubtitle" class="form-control" value="(단위: %, 자료: WHO)" oninput="updatePreview()">
             
             <label>바닥글 (기자명 등)</label>
-            <input type="text" id="inputFooter" class="form-control" value="그래픽 박조비 기자" oninput="updatePreview()">
+            <input type="text" id="inputFooter" class="form-control" value="도해 그래프 제작소" oninput="updatePreview()">
         </div>
     </div>
 
@@ -120,8 +120,8 @@
     <div class="step-card step-4" id="step4">
         <div class="step-header" onclick="toggleStep('step4')"><span>💾 4) 저장</span> <span>▼</span></div>
         <div class="step-body">
-            <button class="btn btn-danger w-100 mb-3" onclick="updatePreview()">🔄 수동 적용하기</button>
-            <button class="btn btn-dark w-100 mb-2" onclick="downloadImage()">📸 고해상도 PNG 저장</button>
+            <button class="btn btn-danger w-100 mb-3" onclick="updatePreview()">수동 적용하기</button>
+            <button class="btn btn-dark w-100 mb-2" onclick="downloadImage()">고해상도 PNG 저장</button>
             <p class="text-muted small text-center">현재 작업 화면을 이미지로 추출합니다.</p>
         </div>
     </div>
@@ -130,14 +130,14 @@
 <div class="preview-area">
     <div class="paper" id="capture-area">
         <div class="chart-title-area">
-            <h1 class="chart-title" id="outTitle">세계 D램 시장 점유율(22년 3분기)</h1>
-            <p class="chart-subtitle" id="outSubtitle">(단위: %, 자료: 옴디아)</p>
+            <h1 class="chart-title" id="outTitle">세계 자원 점유량</h1>
+            <p class="chart-subtitle" id="outSubtitle">(단위: %, 자료: WHO)</p>
         </div>
         <div class="chart-container">
             <canvas id="myChart"></canvas>
         </div>
         <div class="chart-footer">
-            <span id="outFooter" style="font-size:14px; font-weight:bold;">신문사에서</span> <span>신문사</span>
+            <span id="outFooter" style="font-size:14px; font-weight:bold;">공란</span> <span>도해 제작소</span>
         </div>
     </div>
 </div>
