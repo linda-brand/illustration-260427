@@ -230,12 +230,12 @@
                 datasets: [{
                     data: dataValues,
                     backgroundColor: currentPalette,
-                    borderWidth: 3,
+                    borderWidth: 4,
                     borderColor: '#ffffff', // 구분선 흰색
                 }]
             },
             options: {
-                devicePixelRatio: 3, // 👈 [핵심!] 캔버스 내부 화질을 3배로 높여서 캡처 시 깨짐 방지
+                devicePixelRatio: 4, // 👈 [핵심!] 캔버스 내부 화질을 3배로 높여서 캡처 시 깨짐 방지
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: chartType === 'doughnut' ? '30%' : '0%', // 도넛 두께
